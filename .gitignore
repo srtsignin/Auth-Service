@@ -1,5 +1,5 @@
 # Secret File
-*/secret.properties
+auth-keys.properties
 
 # Compiled class file
 *.class
