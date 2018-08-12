@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import edu.rosehulman.csse.rosefire.server.AuthData;
 import edu.rosehulman.csse.rosefire.server.RosefireError;
 import edu.rosehulman.csse.rosefire.server.RosefireTokenVerifier;
+import io.jsonwebtoken.MalformedJwtException;
 import models.RolesResponse;
 import spark.Request;
 import spark.Response;
@@ -59,7 +60,7 @@ public class App {
         AuthData decodedToken;
         try {
             decodedToken = verifier.verify(token);
-        } catch (RosefireError error) {
+        } catch (RosefireError | MalformedJwtException error) {
             response.status(200);
             return new RolesResponse("Authorization Failed");
         }
