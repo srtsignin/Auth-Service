@@ -1,6 +1,9 @@
 plugins {
     id 'java'
+    id 'application'
 }
+
+mainClassName = "Service.App"
 
 group 'in.srtsign'
 version '1.0-SNAPSHOT'
@@ -27,3 +30,4 @@ dependencies {
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
+
