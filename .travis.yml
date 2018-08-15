@@ -1,0 +1,13 @@
+language: java
+
+java:
+  - "9"
+
+install:
+  - ./gradlew assemble
+
+script:
+  - ./gradlew installDist
+  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  - docker build -t cjblink1/srtsignin-auth-service:$TRAVIS_COMMIT .
+  - docker push cjblink1/srtsignin-auth-service:$TRAVIS_COMMIT

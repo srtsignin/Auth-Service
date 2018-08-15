@@ -1,3 +1,8 @@
+# Eclipse
+.classpath
+.project
+.settings/
+
 # Secret File
 auth-keys.properties
 
@@ -34,6 +39,7 @@ hs_err_pid*
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea*
 
 # Generated files
 .idea/**/contentModel.xml
