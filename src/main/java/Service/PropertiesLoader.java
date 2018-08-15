@@ -1,32 +1,29 @@
 package Service;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Properties;
 
 public class PropertiesLoader {
 
-    public static void LoadFromFile(String fileName) {
+    public static void LoadFromFile(Path filepath) {
         try {
-            loadProperties(fileName);
+            loadProperties(filepath.toString());
         } catch (IOException exception) {
             exception.printStackTrace();
-            throw new RuntimeException("Unable to load file " + fileName);
+            throw new RuntimeException("Unable to load file " + filepath.toString());
         }
     }
 
     private static void loadProperties(String fileName) throws IOException {
         Properties newProperties = System.getProperties();
 
-        InputStream inputStream = getFileStream(fileName);
+        InputStream inputStream = new FileInputStream(fileName);
         newProperties.load(inputStream);
         inputStream.close();
 
         System.setProperties(newProperties);
-    }
-
-    private static InputStream getFileStream(String fileName) {
-        ClassLoader classLoader = PropertiesLoader.class.getClassLoader();
-        return classLoader.getResourceAsStream(fileName);
     }
 }

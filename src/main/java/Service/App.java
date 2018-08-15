@@ -13,6 +13,8 @@ import spark.Spark;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import static spark.Spark.get;
@@ -20,7 +22,7 @@ import static spark.Spark.port;
 
 public class App {
 
-    private static String PROPERTIES = "auth-keys.properties";
+    private static Path PROPERTIES = Paths.get(".", "secrets", "auth-keys.properties");
 
     public static void main(String[] args) {
         PropertiesLoader.LoadFromFile(PROPERTIES);

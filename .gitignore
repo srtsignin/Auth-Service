@@ -5,6 +5,7 @@
 
 # Secret File
 auth-keys.properties
+secrets/
 
 # Compiled class file
 *.class
