@@ -3,10 +3,6 @@
 .project
 .settings/
 
-# Secret File
-auth-keys.properties
-secrets/
-
 # Compiled class file
 *.class
 
@@ -91,6 +87,7 @@ cmake-build-*/
 
 # IntelliJ
 out/
+bin/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
