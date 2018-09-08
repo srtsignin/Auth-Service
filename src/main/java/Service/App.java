@@ -15,7 +15,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Properties;
+import java.util.Arrays;
 
 import static spark.Spark.get;
 import static spark.Spark.port;
@@ -23,10 +23,13 @@ import static spark.Spark.port;
 public class App {
 
     private static Path PROPERTIES = Paths.get(".", "secrets", "auth-keys.properties");
+    private static Neo4JDriver driver;
 
     public static void main(String[] args) {
         PropertiesLoader.LoadFromFile(PROPERTIES);
         addExceptionConsoleLogger();
+
+        driver = new Neo4JDriver();
         createEndpoints();
     }
 
@@ -69,8 +72,10 @@ public class App {
             return new RolesResponse("Authorization Failed");
         }
 
-        System.out.println(decodedToken.getUsername());
 
-        return new RolesResponse();
+        String[] roles = driver.getRoles(decodedToken.getUsername());
+        RolesResponse rolesResponse = new RolesResponse(roles, "Successful");
+
+        return rolesResponse;
     }
 }
