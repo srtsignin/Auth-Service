@@ -1,7 +1,7 @@
 FROM anapsix/alpine-java:9
 COPY ./build/install .
-WORKDIR AuthService/bin
+WORKDIR RoleService/bin
 EXPOSE 80
-CMD ./AuthService
+CMD ./RoleService
 
 

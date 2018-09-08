@@ -44,8 +44,8 @@ public class App {
     private static void createEndpoints() {
         System.out.println("Starting App on http://localhost:80/");
         port(80);
-        get("/api/auth/", ((request, response) -> "Welcome to the Auth Server"));
-        get("/api/auth/role", (App::getRole), getJsonTransformer());
+        get("/test", ((request, response) -> "Welcome to the Auth Server"));
+        get("/", (App::getRole), getJsonTransformer());
     }
 
     private static ResponseTransformer getJsonTransformer() {
