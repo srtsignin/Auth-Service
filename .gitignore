@@ -108,4 +108,4 @@ fabric.properties
 .idea/httpRequests
 
 # Secrets
-.properties
+secrets/*.properties
