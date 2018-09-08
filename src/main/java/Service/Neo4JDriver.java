@@ -1,13 +1,13 @@
 package Service;
 
 import org.neo4j.driver.v1.*;
+import org.neo4j.driver.v1.types.Node;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Neo4JDriver {
-    private final String ROLES_QUERY_TEMPLATE = "match (:User {username: \"%s\"}) - [] - (r:Role) return r";
+    private final String ROLES_QUERY_TEMPLATE = "match (:User {username: \"%s\"}) - [*] -> (r:Role) return r";
     private String url = System.getProperty("neo4j.url");
     private String username = System.getProperty("neo4j.username");
     private String password = System.getProperty("neo4j.password");
@@ -27,10 +27,14 @@ public class Neo4JDriver {
             String[] roles = session.writeTransaction(tx -> {
                 List<String> rolesList = new ArrayList<>();
                 StatementResult result = tx.run(String.format(ROLES_QUERY_TEMPLATE, username));
-                result.forEachRemaining(record -> rolesList.add(record.values().get(0).asNode().get("role").toString()));
+                result.forEachRemaining(record -> rolesList.add(extractRoleNameFromNode(record.values().get(0).asNode())));
                 return rolesList.toArray(new String[0]);
             });
             return roles;
         }
+    }
+
+    private String extractRoleNameFromNode(Node node) {
+        return node.get("role").toString().replace("\"", "");
     }
 }

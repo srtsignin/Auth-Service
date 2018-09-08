@@ -1,5 +1,7 @@
 package models;
 
+import java.util.Arrays;
+
 public class RolesResponse {
     private String[] roles;
     private String message;
@@ -33,5 +35,13 @@ public class RolesResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @Override
+    public String toString() {
+        return "RolesResponse{" +
+                "roles=" + Arrays.toString(roles) +
+                ", message='" + message + '\'' +
+                '}';
     }
 }

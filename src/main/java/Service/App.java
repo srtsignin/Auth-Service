@@ -15,7 +15,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 import static spark.Spark.get;
 import static spark.Spark.port;
@@ -72,9 +71,12 @@ public class App {
             return new RolesResponse("Authorization Failed");
         }
 
-
         String[] roles = driver.getRoles(decodedToken.getUsername());
         RolesResponse rolesResponse = new RolesResponse(roles, "Successful");
+
+        if(roles.length == 0) {
+            rolesResponse.setRoles(new String[] { "Student" });
+        }
 
         return rolesResponse;
     }
