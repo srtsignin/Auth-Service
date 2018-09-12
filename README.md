@@ -1,10 +1,9 @@
-# Auth-Service
+# Role-Service
 Provides Endpoints for Determining User Roles
 
 ## Neo4j DB Creation Script
 
 CREATE CONSTRAINT ON (n:User) ASSERT n.username IS UNIQUE
-CREATE CONSTRAINT ON (n:User) ASSERT EXISTS (n.username)
 
 MERGE (:Role {role : "Admin"})
 MERGE (:Role {role : "Staff"})
