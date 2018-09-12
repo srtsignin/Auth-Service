@@ -1,5 +1,8 @@
 package Service;
 
+import Exceptions.DatabaseDriverException;
+import Exceptions.InvalidTokenException;
+import Exceptions.MissingTokenException;
 import com.google.gson.Gson;
 import edu.rosehulman.csse.rosefire.server.AuthData;
 import edu.rosehulman.csse.rosefire.server.RosefireError;
@@ -45,20 +48,18 @@ public class App {
         System.out.println("Starting App on http://localhost:80/");
         port(80);
         get("/test", ((request, response) -> "Welcome to the Auth Server"));
-        get("/", (App::getRole), getJsonTransformer());
+        get("/roles", (App::createRolesResponse), getJsonTransformer());
     }
 
     private static ResponseTransformer getJsonTransformer() {
         return object -> new Gson().toJson(object);
     }
 
-
-    private static RolesResponse getRole(Request request, Response response) {
+    private static String getUserFromRosefire(Request request) {
         String token = request.headers("RosefireToken");
 
         if (token == null || token.isEmpty()) {
-            response.status(400);
-            return new RolesResponse("RosefireToken Header not present");
+            throw new MissingTokenException("Missing Rosefire token");
         }
 
         RosefireTokenVerifier verifier = new RosefireTokenVerifier(System.getProperty("rosefire.secret"));
@@ -67,17 +68,38 @@ public class App {
         try {
             decodedToken = verifier.verify(token);
         } catch (RosefireError | MalformedJwtException error) {
+            throw new InvalidTokenException("Invalid Rosefire token", error);
+        }
+
+        return decodedToken.getUsername();
+    }
+
+    private static RolesResponse createRolesResponse(Request request, Response response) {
+        try {
+            String username = getUserFromRosefire(request);
+            String[] roles = getRoles(username);
+            return new RolesResponse(roles, "Successful");
+        } catch (MissingTokenException error) {
+            response.status(400);
+            return new RolesResponse("RosefireToken Header not present");
+        } catch (InvalidTokenException error) {
             response.status(200);
             return new RolesResponse("Authorization Failed");
+        } catch (DatabaseDriverException error) {
+            response.status(503);
+            return new RolesResponse("Unable to Validate Roles");
         }
+    }
 
-        String[] roles = driver.getRoles(decodedToken.getUsername());
-        RolesResponse rolesResponse = new RolesResponse(roles, "Successful");
-
-        if(roles.length == 0) {
-            rolesResponse.setRoles(new String[] { "Student" });
+    private static String[] getRoles(String username) {
+        try {
+            String[] roles = driver.getRoles(username);
+            if (roles.length == 0) {
+                roles = new String[]{"Student"};
+            }
+            return roles;
+        } catch (Exception error) {
+            throw new DatabaseDriverException("Neo4J error", error);
         }
-
-        return rolesResponse;
     }
 }
