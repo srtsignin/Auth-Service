@@ -31,7 +31,6 @@ public class App {
     public static void main(String[] args) {
         PropertiesLoader.LoadFromFile(PROPERTIES);
         addExceptionConsoleLogger();
-
         createEndpoints();
     }
 
