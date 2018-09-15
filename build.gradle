@@ -3,7 +3,7 @@ plugins {
     id 'application'
 }
 
-mainClassName = "Service.App"
+mainClassName = "service.App"
 
 group 'in.srtsign'
 version '1.0-SNAPSHOT'

@@ -7,21 +7,14 @@ public class CheckResponse {
 
 
     public CheckResponse(Boolean isAuthorized, String role, String message) {
-        this(role, message);
+        this.role = role;
+        this.message = message;
         this.isAuthorized = isAuthorized;
     }
 
     public CheckResponse(String role, String message) {
-        this.role = role;
-        this.message = message;
+        this(false, role, message);
     }
-
-    public CheckResponse() {
-        this.isAuthorized = false;
-        this.role = "";
-        this.message = "";
-    }
-
 
     public Boolean getAuthorized() {
         return isAuthorized;
