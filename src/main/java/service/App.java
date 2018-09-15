@@ -90,7 +90,7 @@ public class App {
     private static String[] getRoles(Request request) {
         String username = getUserFromRosefire(request);
         try {
-            String[] roles = Neo4JDriver.getInstances().getRoles(username);
+            String[] roles = Neo4JDriver.getInstance().getRoles(username);
             if (roles.length == 0) {
                 roles = new String[]{"Student"};
             }

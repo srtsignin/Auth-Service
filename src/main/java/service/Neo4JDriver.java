@@ -15,13 +15,9 @@ public class Neo4JDriver {
     private final Driver driver;
     private static Neo4JDriver singleton = null;
 
-    public static Neo4JDriver getInstances() {
+    public static synchronized Neo4JDriver getInstance() {
         if (singleton == null) {
-            synchronized (Neo4JDriver.class) {
-                if (singleton == null) {
-                    singleton = new Neo4JDriver();
-                }
-            }
+                singleton = new Neo4JDriver();
         }
         return singleton;
     }
