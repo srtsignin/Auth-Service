@@ -27,13 +27,11 @@ import static spark.Spark.port;
 public class App {
 
     private static final Path PROPERTIES = Paths.get(".", "secrets", "auth-keys.properties");
-    private static Neo4JDriver driver;
 
     public static void main(String[] args) {
         PropertiesLoader.LoadFromFile(PROPERTIES);
         addExceptionConsoleLogger();
 
-        driver = new Neo4JDriver();
         createEndpoints();
     }
 
@@ -93,7 +91,7 @@ public class App {
     private static String[] getRoles(Request request) {
         String username = getUserFromRosefire(request);
         try {
-            String[] roles = driver.getRoles(username);
+            String[] roles = Neo4JDriver.getInstances().getRoles(username);
             if (roles.length == 0) {
                 roles = new String[]{"Student"};
             }

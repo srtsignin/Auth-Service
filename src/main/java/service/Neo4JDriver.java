@@ -13,8 +13,20 @@ public class Neo4JDriver {
     private static final String PASSWORD = System.getProperty("neo4j.password");
 
     private final Driver driver;
+    private static Neo4JDriver singleton = null;
 
-    public Neo4JDriver() {
+    public static Neo4JDriver getInstances() {
+        if (singleton == null) {
+            synchronized (Neo4JDriver.class) {
+                if (singleton == null) {
+                    singleton = new Neo4JDriver();
+                }
+            }
+        }
+        return singleton;
+    }
+
+    private Neo4JDriver() {
         driver = GraphDatabase.driver(URL, AuthTokens.basic(USERNAME, PASSWORD));
     }
 
