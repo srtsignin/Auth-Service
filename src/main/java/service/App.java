@@ -81,6 +81,7 @@ public class App {
             response.status(200);
             return new CheckResponse(roleToCheck,"Authorization Failed");
         } catch (DatabaseDriverException error) {
+            System.out.println("DBDriverException Occured. Sending 503");
             response.status(503);
             return new CheckResponse(roleToCheck,"Unable to Validate Roles");
         }
