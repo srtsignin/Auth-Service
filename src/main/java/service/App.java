@@ -90,10 +90,12 @@ public class App {
     private static String[] getRoles(Request request) {
         String username = getUserFromRosefire(request);
         try {
+            System.out.println("Attempting to get roles");
             String[] roles = Neo4JDriver.getInstance().getRoles(username);
             if (roles.length == 0) {
                 roles = new String[]{"Student"};
             }
+            System.out.println("Found Roles: " + Arrays.toString(roles));
             return roles;
         } catch (Exception error) {
             throw new DatabaseDriverException("Neo4J error", error);
@@ -107,11 +109,13 @@ public class App {
             throw new MissingTokenException("Missing Rosefire token");
         }
 
+        System.out.println("Attempting to verify token");
         RosefireTokenVerifier verifier = new RosefireTokenVerifier(System.getProperty("rosefire.secret"));
 
         AuthData decodedToken;
         try {
             decodedToken = verifier.verify(token);
+            System.out.println("Decoded Token: " + decodedToken);
         } catch (RosefireError | MalformedJwtException error) {
             throw new InvalidTokenException("Invalid Rosefire token", error);
         }

@@ -11,6 +11,7 @@ public class PropertiesLoader {
     public static void LoadFromFile(Path filepath) {
         try {
             loadProperties(filepath.toString());
+            System.out.println("Loaded Secrets");
         } catch (IOException exception) {
             exception.printStackTrace();
             throw new RuntimeException("Unable to load file " + filepath.toString());
