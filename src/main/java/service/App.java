@@ -8,9 +8,7 @@ import exceptions.InvalidTokenException;
 import exceptions.MissingTokenException;
 import models.CheckResponse;
 import models.RolesResponse;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.log4j.*;
 import spark.Request;
 import spark.Response;
 import spark.ResponseTransformer;
@@ -33,7 +31,8 @@ public class App {
     public static void main(String[] args) {
         Logger rootLogger = Logger.getRootLogger();
         rootLogger.setLevel(Level.DEBUG);
-        rootLogger.addAppender(new ConsoleAppender());
+        PatternLayout layout = new PatternLayout("%d{ISO8601} [%t] %-5p %c %x - %m%n");
+        rootLogger.addAppender( new ConsoleAppender(layout));
 
         PropertiesLoader.LoadFromFile(PROPERTIES);
         addExceptionConsoleLogger();
