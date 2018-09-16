@@ -8,6 +8,9 @@ import exceptions.InvalidTokenException;
 import exceptions.MissingTokenException;
 import models.CheckResponse;
 import models.RolesResponse;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import spark.Request;
 import spark.Response;
 import spark.ResponseTransformer;
@@ -25,8 +28,13 @@ import static spark.Spark.port;
 public class App {
 
     private static final Path PROPERTIES = Paths.get(".", "secrets", "auth-keys.properties");
+    private static final Logger log = Logger.getLogger(App.class);
 
     public static void main(String[] args) {
+        Logger rootLogger = Logger.getRootLogger();
+        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.addAppender(new ConsoleAppender());
+
         PropertiesLoader.LoadFromFile(PROPERTIES);
         addExceptionConsoleLogger();
         createEndpoints();
@@ -37,13 +45,12 @@ public class App {
             final StringWriter sw = new StringWriter();
             final PrintWriter pw = new PrintWriter(sw, true);
             e.printStackTrace(pw);
-            e.printStackTrace(System.out);
-            System.out.println(sw.getBuffer().toString());
+            log.error(e);
         });
     }
 
     private static void createEndpoints() {
-        System.out.println("Starting App on http://localhost:80/");
+        log.debug("Starting App on http://localhost:80/");
         port(80);
         get("/test", ((request, response) -> "Welcome to the Auth Server"));
         get("/roles", (App::createRolesResponse), getJsonTransformer());
@@ -70,6 +77,7 @@ public class App {
     }
 
     private static CheckResponse checkRole(Request request, Response response) {
+        log.debug("Recieved Request at /");
         String roleToCheck = request.queryParamOrDefault("role","Student");
         try {
             String[] roles = getRoles(request);
@@ -81,7 +89,7 @@ public class App {
             response.status(200);
             return new CheckResponse(roleToCheck,"Authorization Failed");
         } catch (DatabaseDriverException error) {
-            System.out.println("DBDriverException Occured. Sending 503");
+            log.error("DBDriverException Occured. Sending 503");
             response.status(503);
             return new CheckResponse(roleToCheck,"Unable to Validate Roles");
         }
@@ -90,12 +98,12 @@ public class App {
     private static String[] getRoles(Request request) {
         String username = getUserFromRosefire(request);
         try {
-            System.out.println("Attempting to get roles");
+            log.debug("Attempting to get roles");
             String[] roles = Neo4JDriver.getInstance().getRoles(username);
             if (roles.length == 0) {
                 roles = new String[]{"Student"};
             }
-            System.out.println("Found Roles: " + Arrays.toString(roles));
+            log.debug("Found Roles: " + Arrays.toString(roles));
             return roles;
         } catch (Exception error) {
             throw new DatabaseDriverException("Neo4J error", error);
@@ -109,17 +117,17 @@ public class App {
             throw new MissingTokenException("Missing Rosefire token");
         }
 
-        System.out.println("Attempting to verify token");
+        log.debug("Attempting to verify token");
         RosefireTokenVerifier verifier = new RosefireTokenVerifier(System.getProperty("rosefire.secret"));
 
         AuthData decodedToken;
         try {
-            System.out.println("Decoding Token");
+            log.debug("Decoding Token");
             decodedToken = verifier.verify(token);
-            System.out.println("Decoded Token: " + decodedToken);
+            log.debug("Decoded Token: " + decodedToken);
         } catch (Exception error) {
-            System.out.println("Exception occured attempting to validate token " + error.getMessage());
-            error.printStackTrace(System.out);
+            log.warn("Exception occured attempting to validate token " + error.getMessage());
+            log.error(error);
             throw new InvalidTokenException("Invalid Rosefire token", error);
         }
         return decodedToken.getUsername();
