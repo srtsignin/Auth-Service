@@ -1,4 +1,4 @@
-FROM anapsix/alpine-java:9
+FROM anapsix/alpine-java:8
 COPY ./build/install .
 WORKDIR RoleService/bin
 EXPOSE 80
