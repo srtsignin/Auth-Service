@@ -72,7 +72,7 @@ public class App {
             response.status(200);
             return new RolesResponse("Authorization Failed");
         } catch (DatabaseDriverException error) {
-            log.error(error);
+            log.error("It broke", error);
             response.status(503);
             return new RolesResponse("Unable to Validate Roles");
         }
@@ -110,6 +110,7 @@ public class App {
             log.debug("Found Roles: " + Arrays.toString(roles));
             return roles;
         } catch (Exception error) {
+            log.error("Error occured getting roles", error);
             throw new DatabaseDriverException("Neo4J error", error);
         }
     }
