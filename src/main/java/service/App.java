@@ -64,12 +64,15 @@ public class App {
         try {
             return new RolesResponse(getRoles(request), "Successful");
         } catch (MissingTokenException error) {
+            log.error(error);
             response.status(400);
             return new RolesResponse("RosefireToken Header not present");
         } catch (InvalidTokenException error) {
+            log.error(error);
             response.status(200);
             return new RolesResponse("Authorization Failed");
         } catch (DatabaseDriverException error) {
+            log.error(error);
             response.status(503);
             return new RolesResponse("Unable to Validate Roles");
         }
@@ -82,13 +85,15 @@ public class App {
             String[] roles = getRoles(request);
             return new CheckResponse(Arrays.asList(roles).contains(roleToCheck),roleToCheck,"Successful");
         } catch (MissingTokenException error) {
+            log.error(error);
             response.status(400);
             return new CheckResponse(roleToCheck, "RosefireToken Header not present");
         } catch (InvalidTokenException error) {
+            log.error(error);
             response.status(200);
             return new CheckResponse(roleToCheck,"Authorization Failed");
         } catch (DatabaseDriverException error) {
-            log.error("DBDriverException Occured. Sending 503");
+            log.error(error);
             response.status(503);
             return new CheckResponse(roleToCheck,"Unable to Validate Roles");
         }
