@@ -2,12 +2,10 @@ package service;
 
 import com.google.gson.Gson;
 import edu.rosehulman.csse.rosefire.server.AuthData;
-import edu.rosehulman.csse.rosefire.server.RosefireError;
 import edu.rosehulman.csse.rosefire.server.RosefireTokenVerifier;
 import exceptions.DatabaseDriverException;
 import exceptions.InvalidTokenException;
 import exceptions.MissingTokenException;
-import io.jsonwebtoken.MalformedJwtException;
 import models.CheckResponse;
 import models.RolesResponse;
 import spark.Request;
@@ -118,7 +116,7 @@ public class App {
             System.out.println("Decoding Token");
             decodedToken = verifier.verify(token);
             System.out.println("Decoded Token: " + decodedToken);
-        } catch (RosefireError | MalformedJwtException error) {
+        } catch (Exception error) {
             System.out.println("Exception occured attempting to validate token " + error.getMessage());
             error.printStackTrace(System.out);
             throw new InvalidTokenException("Invalid Rosefire token", error);
