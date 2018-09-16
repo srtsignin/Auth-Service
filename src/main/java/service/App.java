@@ -39,7 +39,8 @@ public class App {
             final StringWriter sw = new StringWriter();
             final PrintWriter pw = new PrintWriter(sw, true);
             e.printStackTrace(pw);
-            System.err.println(sw.getBuffer().toString());
+            e.printStackTrace(System.out);
+            System.out.println(sw.getBuffer().toString());
         });
     }
 
@@ -114,9 +115,12 @@ public class App {
 
         AuthData decodedToken;
         try {
+            System.out.println("Decoding Token");
             decodedToken = verifier.verify(token);
             System.out.println("Decoded Token: " + decodedToken);
         } catch (RosefireError | MalformedJwtException error) {
+            System.out.println("Exception occured attempting to validate token " + error.getMessage());
+            error.printStackTrace(System.out);
             throw new InvalidTokenException("Invalid Rosefire token", error);
         }
         return decodedToken.getUsername();
