@@ -16,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import models.CheckResponse;
 import models.RolesResponse;
+import models.User;
+import models.UserAndRoles;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -52,7 +54,7 @@ public class App {
 
     private static void createEndpoints() {
         log.debug("Starting App on http://localhost:80/");
-        port(80);
+        port(2100);
         get("/test", ((request, response) -> "Welcome to the Auth Server"));
         get("/roles", (App::createRolesResponse), getJsonTransformer());
         get("/", (App::checkRole), getJsonTransformer());
@@ -84,8 +86,8 @@ public class App {
         log.debug("Recieved Request at /");
         String roleToCheck = request.queryParamOrDefault("role","Student");
         try {
-            String[] roles = getRoles(request);
-            return new CheckResponse(Arrays.asList(roles).contains(roleToCheck),roleToCheck,"Successful");
+            UserAndRoles userAndRoles = getRoles(request);
+            return new CheckResponse(Arrays.asList(userAndRoles.getRoles()).contains(roleToCheck),roleToCheck,"Successful");
         } catch (MissingTokenException error) {
             log.error(error);
             response.status(400);
@@ -101,24 +103,24 @@ public class App {
         }
     }
 
-    private static String[] getRoles(Request request) {
-        String username = getUserFromRosefire(request);
+    private static UserAndRoles getRoles(Request request) {
+        User user = getUserFromRosefire(request);
         try {
             log.debug("Attempting to get roles");
-            String[] roles = Neo4JDriver.getInstance().getRoles(username);
+            String[] roles = Neo4JDriver.getInstance().getRoles(user.getUsername());
             log.debug(Arrays.toString(roles));
             if (roles.length == 0) {
                 roles = new String[]{"Student"};
             }
             log.debug("Found Roles: " + Arrays.toString(roles));
-            return roles;
+            return new UserAndRoles(roles, user);
         } catch (Exception error) {
             log.error("Error occured getting roles", error);
             throw new DatabaseDriverException("Neo4J error", error);
         }
     }
 
-    private static String getUserFromRosefire(Request request) {
+    private static User getUserFromRosefire(Request request) {
         String token = request.headers("RosefireToken");
 
         if (token == null || token.isEmpty()) {
@@ -138,6 +140,6 @@ public class App {
             log.error(error);
             throw new InvalidTokenException("Invalid Rosefire token", error);
         }
-        return decodedToken.getUsername();
+        return new User(decodedToken.getUsername(), decodedToken.getName());
     }
 }

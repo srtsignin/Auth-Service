@@ -3,12 +3,14 @@ package models;
 import java.util.Arrays;
 
 public class RolesResponse {
+    private User user;
     private String[] roles;
     private String message;
 
-    public RolesResponse(String[] roles, String message) {
+    public RolesResponse(UserAndRoles userAndRoles, String message) {
         this(message);
-        this.roles = roles;
+        this.user = userAndRoles.getUser();
+        this.roles = userAndRoles.getRoles();
     }
 
     public RolesResponse(String message) {
@@ -17,8 +19,17 @@ public class RolesResponse {
     }
 
     public RolesResponse() {
-        roles = new String[0];
+        user = new User();
+        roles = new String[]{};
         message = "";
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String[] getRoles() {
@@ -42,6 +53,9 @@ public class RolesResponse {
         return "RolesResponse{" +
                 "roles=" + Arrays.toString(roles) +
                 ", message='" + message + '\'' +
-                '}';
+                ", user={" +
+                "username='" + user.getUsername() + '\'' +
+                ",name='" + user.getName() + '\'' +
+                "}}";
     }
 }
