@@ -1,27 +1,29 @@
 package service;
 
+import static spark.Spark.get;
+import static spark.Spark.port;
+
 import com.google.gson.Gson;
 import edu.rosehulman.csse.rosefire.server.AuthData;
 import edu.rosehulman.csse.rosefire.server.RosefireTokenVerifier;
 import exceptions.DatabaseDriverException;
 import exceptions.InvalidTokenException;
 import exceptions.MissingTokenException;
-import models.CheckResponse;
-import models.RolesResponse;
-import org.apache.log4j.*;
-import spark.Request;
-import spark.Response;
-import spark.ResponseTransformer;
-import spark.Spark;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
-import static spark.Spark.get;
-import static spark.Spark.port;
+import models.CheckResponse;
+import models.RolesResponse;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+import spark.Request;
+import spark.Response;
+import spark.ResponseTransformer;
+import spark.Spark;
 
 public class App {
 
@@ -104,6 +106,7 @@ public class App {
         try {
             log.debug("Attempting to get roles");
             String[] roles = Neo4JDriver.getInstance().getRoles(username);
+            log.debug(Arrays.toString(roles));
             if (roles.length == 0) {
                 roles = new String[]{"Student"};
             }

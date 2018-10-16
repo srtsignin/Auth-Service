@@ -1,5 +1,6 @@
 package service;
 
+import org.apache.log4j.Logger;
 import org.neo4j.driver.v1.*;
 import org.neo4j.driver.v1.types.Node;
 
@@ -7,10 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Neo4JDriver {
-    private static final String ROLES_QUERY_TEMPLATE = "match (:User {USERNAME: \"%s\"}) - [*] -> (r:Role) return r";
+    private static final String ROLES_QUERY_TEMPLATE = "match (:User {username: \"%s\"}) - [*] -> (r:Role) return r";
     private static final String URL = System.getProperty("neo4j.url");
     private static final String USERNAME = System.getProperty("neo4j.username");
     private static final String PASSWORD = System.getProperty("neo4j.password");
+    private static final org.apache.log4j.Logger log = Logger.getLogger(Neo4JDriver.class);
+
 
     private final Driver driver;
     private static Neo4JDriver singleton = null;
