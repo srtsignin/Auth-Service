@@ -3,6 +3,7 @@ package service;
 import static spark.Spark.get;
 import static spark.Spark.port;
 
+import cardfire.CardfireVerifier;
 import com.google.gson.Gson;
 import edu.rosehulman.csse.rosefire.server.AuthData;
 import edu.rosehulman.csse.rosefire.server.RosefireTokenVerifier;
@@ -36,7 +37,7 @@ public class App {
         Logger rootLogger = Logger.getRootLogger();
         rootLogger.setLevel(Level.DEBUG);
         PatternLayout layout = new PatternLayout("%d{ISO8601} [%t] %-5p %c %x - %m%n");
-        rootLogger.addAppender( new ConsoleAppender(layout));
+        rootLogger.addAppender(new ConsoleAppender(layout));
 
         PropertiesLoader.LoadFromFile(PROPERTIES);
         addExceptionConsoleLogger();
@@ -84,10 +85,10 @@ public class App {
 
     private static CheckResponse checkRole(Request request, Response response) {
         log.debug("Recieved Request at /");
-        String roleToCheck = request.queryParamOrDefault("role","Student");
+        String roleToCheck = request.queryParamOrDefault("role", "Student");
         try {
             UserAndRoles userAndRoles = getRoles(request);
-            return new CheckResponse(Arrays.asList(userAndRoles.getRoles()).contains(roleToCheck),roleToCheck,"Successful");
+            return new CheckResponse(Arrays.asList(userAndRoles.getRoles()).contains(roleToCheck), roleToCheck, "Successful");
         } catch (MissingTokenException error) {
             log.error(error);
             response.status(400);
@@ -95,11 +96,11 @@ public class App {
         } catch (InvalidTokenException error) {
             log.error(error);
             response.status(200);
-            return new CheckResponse(roleToCheck,"Authorization Failed");
+            return new CheckResponse(roleToCheck, "Authorization Failed");
         } catch (DatabaseDriverException error) {
             log.error(error);
             response.status(503);
-            return new CheckResponse(roleToCheck,"Unable to Validate Roles");
+            return new CheckResponse(roleToCheck, "Unable to Validate Roles");
         }
     }
 
@@ -124,7 +125,7 @@ public class App {
         String token = request.headers("RosefireToken");
 
         if (token == null || token.isEmpty()) {
-            throw new MissingTokenException("Missing Rosefire token");
+            return getUserFromCardfire(request);
         }
 
         log.debug("Attempting to verify token");
@@ -141,5 +142,17 @@ public class App {
             throw new InvalidTokenException("Invalid Rosefire token", error);
         }
         return new User(decodedToken.getUsername(), decodedToken.getName());
+    }
+
+    private static User getUserFromCardfire(Request request) {
+        String token = request.headers("CardfireToken");
+        if (token == null || token.isEmpty()) {
+            throw new MissingTokenException("Missing Rosefire/Cardfire token");
+        }
+        CardfireVerifier verifier = new CardfireVerifier();
+        User user = verifier.verifyCardfireToken(token);
+        log.debug(user);
+        log.debug("\n\n\n\n\n\n");
+        return user;
     }
 }
