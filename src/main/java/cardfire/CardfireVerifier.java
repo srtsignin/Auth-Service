@@ -27,7 +27,6 @@ public class CardfireVerifier {
             LOGGER.error(e);
             throw new InvalidTokenException("Unable to verify Cardfire Token");
         }
-
     }
 
     private String getResponse(String cardfireToken) {

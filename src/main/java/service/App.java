@@ -71,7 +71,7 @@ public class App {
         } catch (MissingTokenException error) {
             log.error(error);
             response.status(400);
-            return new RolesResponse("RosefireToken Header not present");
+            return new RolesResponse("AuthToken Header not present");
         } catch (InvalidTokenException error) {
             log.error(error);
             response.status(200);
@@ -92,7 +92,7 @@ public class App {
         } catch (MissingTokenException error) {
             log.error(error);
             response.status(400);
-            return new CheckResponse(roleToCheck, "RosefireToken Header not present");
+            return new CheckResponse(roleToCheck, "AuthToken Header not present");
         } catch (InvalidTokenException error) {
             log.error(error);
             response.status(200);
@@ -122,10 +122,10 @@ public class App {
     }
 
     private static User getUserFromRosefire(Request request) {
-        String token = request.headers("RosefireToken");
+        String token = request.headers("AuthToken");
 
         if (token == null || token.isEmpty()) {
-            return getUserFromCardfire(request);
+            throw new MissingTokenException("Missing AuthToken token");
         }
 
         log.debug("Attempting to verify token");
@@ -137,18 +137,14 @@ public class App {
             decodedToken = verifier.verify(token);
             log.debug("Decoded Token: " + decodedToken);
         } catch (Exception error) {
-            log.warn("Exception occured attempting to validate token " + error.getMessage());
+            log.warn("Exception occured attempting to validate Rosefire token " + error.getMessage());
             log.error(error);
-            throw new InvalidTokenException("Invalid Rosefire token", error);
+            return getUserFromCardfire(token);
         }
         return new User(decodedToken.getUsername(), decodedToken.getName());
     }
 
-    private static User getUserFromCardfire(Request request) {
-        String token = request.headers("CardfireToken");
-        if (token == null || token.isEmpty()) {
-            throw new MissingTokenException("Missing Rosefire/Cardfire token");
-        }
+    private static User getUserFromCardfire(String token) {
         CardfireVerifier verifier = new CardfireVerifier();
         User user = verifier.verifyCardfireToken(token);
         log.debug(user);
