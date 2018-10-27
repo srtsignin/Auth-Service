@@ -11,3 +11,4 @@ script:
   - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
   - docker build -t cjblink1/srtsignin-role-service:$TRAVIS_COMMIT .
   - docker push cjblink1/srtsignin-role-service:$TRAVIS_COMMIT
+  - git clone git@github.com:srtsignin/config.git
