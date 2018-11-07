@@ -10,11 +10,13 @@ import edu.rosehulman.csse.rosefire.server.RosefireTokenVerifier;
 import exceptions.DatabaseDriverException;
 import exceptions.InvalidTokenException;
 import exceptions.MissingTokenException;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+
 import models.CheckResponse;
 import models.RolesResponse;
 import models.User;
@@ -35,7 +37,7 @@ public class App {
 
     public static void main(String[] args) {
         Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.setLevel(Level.WARN);
         PatternLayout layout = new PatternLayout("%d{ISO8601} [%t] %-5p %c %x - %m%n");
         rootLogger.addAppender(new ConsoleAppender(layout));
 
@@ -54,20 +56,53 @@ public class App {
     }
 
     private static void createEndpoints() {
-        log.debug("Starting App on http://localhost:80/");
-        port(80);
+        log.warn("Starting App on http://localhost:80/");
+        port(8080);
         get("/test", ((request, response) -> "Welcome to the Auth Server"));
-        get("/roles", (App::createRolesResponse), getJsonTransformer());
-        get("/", (App::checkRole), getJsonTransformer());
+        get("/roles", App::createRolesResponse, getJsonTransformer());
+        get("/farts", App::getAllRoles, getJsonTransformer());
+        get("/", App::checkRole, getJsonTransformer());
     }
 
     private static ResponseTransformer getJsonTransformer() {
         return new Gson()::toJson;
     }
 
+    private static RolesResponse getAllRoles(Request request, Response response) {
+        try {
+            UserAndRoles userRoles = getUserWithRoles(request);
+            checkAdminPermission(userRoles);
+
+            String[] roles = Neo4JDriver.getInstance().getAllRoles();
+            return new RolesResponse(new UserAndRoles(roles, null), "Successful");
+        } catch (MissingTokenException e) {
+            log.error(e);
+            response.status(400);
+            return new RolesResponse("No AuthToken provided");
+        } catch (DatabaseDriverException e) {
+            log.error(e);
+            response.status(500);
+            return new RolesResponse("Unable to reach the server");
+        } catch (Exception e) {
+            log.error(e);
+            response.status(403);
+            return new RolesResponse("Insufficient Permissions to complete request");
+        }
+    }
+
+    private static void checkAdminPermission(UserAndRoles userRoles) {
+        for (String role : userRoles.getRoles()) {
+            System.out.println(role);
+            if (role.equals("Admin")) {
+                return;
+            }
+        }
+        throw new RuntimeException("Insufficient Permissions");
+    }
+
     private static RolesResponse createRolesResponse(Request request, Response response) {
         try {
-            return new RolesResponse(getRoles(request), "Successful");
+            return new RolesResponse(getUserWithRoles(request), "Successful");
         } catch (MissingTokenException error) {
             log.error(error);
             response.status(400);
@@ -84,10 +119,10 @@ public class App {
     }
 
     private static CheckResponse checkRole(Request request, Response response) {
-        log.debug("Recieved Request at /");
+        log.warn("Recieved Request at /");
         String roleToCheck = request.queryParamOrDefault("role", "Student");
         try {
-            UserAndRoles userAndRoles = getRoles(request);
+            UserAndRoles userAndRoles = getUserWithRoles(request);
             return new CheckResponse(Arrays.asList(userAndRoles.getRoles()).contains(roleToCheck), roleToCheck, "Successful");
         } catch (MissingTokenException error) {
             log.error(error);
@@ -104,8 +139,8 @@ public class App {
         }
     }
 
-    private static UserAndRoles getRoles(Request request) {
-        User user = getUserFromRosefire(request);
+    private static UserAndRoles getUserWithRoles(Request request) {
+        User user = getUser(request);
         try {
             log.debug("Attempting to get roles");
             String[] roles = Neo4JDriver.getInstance().getRoles(user.getUsername());
@@ -121,7 +156,7 @@ public class App {
         }
     }
 
-    private static User getUserFromRosefire(Request request) {
+    private static User getUser(Request request) {
         String token = request.headers("AuthToken");
 
         if (token == null || token.isEmpty()) {
@@ -148,7 +183,6 @@ public class App {
         CardfireVerifier verifier = new CardfireVerifier();
         User user = verifier.verifyCardfireToken(token);
         log.debug(user);
-        log.debug("\n\n\n\n\n\n");
         return user;
     }
 }
