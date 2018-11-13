@@ -53,7 +53,7 @@ public class App {
 
     private static void createEndpoints() {
         log.warn("Starting App on http://localhost:80/");
-        port(8080);
+        port(80);
         get("/test", ((request, response) -> "Welcome to the Auth Server"));
         get("/roles", App::createRolesResponse, getJsonTransformer());
 
