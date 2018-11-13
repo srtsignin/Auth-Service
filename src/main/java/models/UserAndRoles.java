@@ -1,6 +1,7 @@
 package models;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class UserAndRoles {
     /**
@@ -34,5 +35,13 @@ public class UserAndRoles {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    @Override
+    public String toString() {
+        return "UserAndRoles{" +
+                "roles=" + Arrays.toString(roles) +
+                ", user=" + user +
+                '}';
     }
 }

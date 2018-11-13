@@ -1,8 +1,5 @@
 package service;
 
-import static spark.Spark.get;
-import static spark.Spark.port;
-
 import cardfire.CardfireVerifier;
 import com.google.gson.Gson;
 import edu.rosehulman.csse.rosefire.server.AuthData;
@@ -10,17 +7,7 @@ import edu.rosehulman.csse.rosefire.server.RosefireTokenVerifier;
 import exceptions.DatabaseDriverException;
 import exceptions.InvalidTokenException;
 import exceptions.MissingTokenException;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-
-import models.CheckResponse;
-import models.RolesResponse;
-import models.User;
-import models.UserAndRoles;
+import models.*;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -29,6 +16,15 @@ import spark.Request;
 import spark.Response;
 import spark.ResponseTransformer;
 import spark.Spark;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+
+import static spark.Spark.*;
 
 public class App {
 
@@ -60,12 +56,40 @@ public class App {
         port(8080);
         get("/test", ((request, response) -> "Welcome to the Auth Server"));
         get("/roles", App::createRolesResponse, getJsonTransformer());
-        get("/farts", App::getAllRoles, getJsonTransformer());
+
+        // Admin Endpoints
+        get("/all_roles", App::getAllRoles, getJsonTransformer());
+        post("/users", ((request, response) -> "Welcome!"));
+        get("/users", App::getAllUsersAndRoles, getJsonTransformer());
+        delete("/users", ((request, response) -> "Yes"));
+
         get("/", App::checkRole, getJsonTransformer());
     }
 
     private static ResponseTransformer getJsonTransformer() {
         return new Gson()::toJson;
+    }
+
+    private static UserResponse getAllUsersAndRoles(Request request, Response response) {
+        try {
+            UserAndRoles userRoles = getUserWithRoles(request);
+            checkAdminPermission(userRoles);
+
+            List<UserAndRoles> users = Neo4JDriver.getInstance().getAll();
+            return new UserResponse("Successful", users);
+        } catch (MissingTokenException e) {
+            log.error(e);
+            response.status(400);
+            return new UserResponse("No AuthToken provided");
+        } catch (DatabaseDriverException e) {
+            log.error(e);
+            response.status(500);
+            return new UserResponse("Unable to reach the server");
+        } catch (Exception e) {
+            log.error(e);
+            response.status(403);
+            return new UserResponse("Insufficient Permissions to complete request");
+        }
     }
 
     private static RolesResponse getAllRoles(Request request, Response response) {
@@ -92,7 +116,6 @@ public class App {
 
     private static void checkAdminPermission(UserAndRoles userRoles) {
         for (String role : userRoles.getRoles()) {
-            System.out.println(role);
             if (role.equals("Admin")) {
                 return;
             }
