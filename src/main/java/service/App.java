@@ -1,12 +1,13 @@
 package service;
 
 import cardfire.CardfireVerifier;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import edu.rosehulman.csse.rosefire.server.AuthData;
 import edu.rosehulman.csse.rosefire.server.RosefireTokenVerifier;
 import exceptions.DatabaseDriverException;
 import exceptions.InvalidTokenException;
 import exceptions.MissingTokenException;
+import exceptions.OnlyOneAdminException;
 import models.*;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
@@ -21,8 +22,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static spark.Spark.*;
 
@@ -53,15 +59,15 @@ public class App {
 
     private static void createEndpoints() {
         log.warn("Starting App on http://localhost:80/");
-        port(80);
+        port(8080);
         get("/test", ((request, response) -> "Welcome to the Auth Server"));
         get("/roles", App::createRolesResponse, getJsonTransformer());
 
         // Admin Endpoints
         get("/all_roles", App::getAllRoles, getJsonTransformer());
-        post("/users", ((request, response) -> "Welcome!"));
+        post("/users", App::editUser, getJsonTransformer());
         get("/users", App::getAllUsersAndRoles, getJsonTransformer());
-        delete("/users", ((request, response) -> "Yes"));
+        delete("/users", App::editUser, getJsonTransformer());
 
         get("/", App::checkRole, getJsonTransformer());
     }
@@ -90,6 +96,60 @@ public class App {
             response.status(403);
             return new UserResponse("Insufficient Permissions to complete request");
         }
+    }
+
+    private static UserResponse editUser(Request request, Response response) {
+        try {
+            return editUser(request);
+        } catch (OnlyOneAdminException e) {
+            log.error(e);
+            response.status(400);
+            return new UserResponse("Cannot Delete the Last Admin");
+        } catch (MissingTokenException e) {
+            log.error(e);
+            response.status(400);
+            return new UserResponse("No AuthToken provided");
+        } catch (DatabaseDriverException e) {
+            log.error(e);
+            response.status(500);
+            return new UserResponse("Unable to reach the server");
+        } catch (ClassCastException | NullPointerException e) {
+            log.error(e);
+            response.status(400);
+            return new UserResponse("Malformated Body");
+        } catch (Exception e) {
+            log.error(e);
+            response.status(403);
+            return new UserResponse("Insufficient Permissions to complete request");
+        }
+    }
+
+    private static UserResponse editUser(Request request) {
+        UserAndRoles userRoles = getUserWithRoles(request);
+        checkAdminPermission(userRoles);
+
+        JsonObject body = (JsonObject) new JsonParser().parse(request.body());
+        String username = body.get("username").getAsString();
+
+        String method = request.requestMethod();
+        UserResponse returnResponse;
+
+        if (method.equals("POST")) {
+            String name = body.get("name").getAsString();
+
+            JsonArray rolesJsonArray = body.getAsJsonArray("roles");
+            Iterator<JsonElement> sourceIter = rolesJsonArray.iterator();
+            Iterable<JsonElement> iterable = () -> sourceIter;
+            List<String> roles = StreamSupport.stream(iterable.spliterator(), false).map(JsonElement::getAsString).collect(Collectors.toList());
+
+            List<UserAndRoles> users = Neo4JDriver.getInstance().editUser(username, name, roles);
+            returnResponse = new UserResponse("Successful", users);
+        } else {
+            String message = Neo4JDriver.getInstance().deleteUser(username) ? "Successful" : "Failed";
+            returnResponse = new UserResponse(message);
+        }
+
+        return returnResponse;
     }
 
     private static RolesResponse getAllRoles(Request request, Response response) {
@@ -183,7 +243,7 @@ public class App {
         String token = request.headers("AuthToken");
 
         if (token == null || token.isEmpty()) {
-            throw new MissingTokenException("Missing AuthToken token");
+            throw new MissingTokenException("Missing AuthToken");
         }
 
         log.debug("Attempting to verify token");
