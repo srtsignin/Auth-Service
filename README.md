@@ -40,6 +40,7 @@ All Endpoints require an AuthToken
     ```
     {
         "username" : "<username>",
+        "name" : "<full name>",
         "roles" : [ "role1", "role2" ]
     }
     ```
